@@ -1,18 +1,33 @@
-import { Injectable } from '@nestjs/common';
+import { HttpService } from '@nestjs/axios';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { lastValueFrom, map, Observable } from 'rxjs';
 import { CreateMovieDto } from './dto/create-movie.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
 
 @Injectable()
 export class MoviesService {
-  constructor() {
-    
-  }
+  constructor(
+    private readonly httpService: HttpService,
+    private readonly configService: ConfigService,
+  ) {}
   create(createMovieDto: CreateMovieDto) {
     return 'This action adds a new movie';
   }
 
-  findAll() {
-    return `This action returns all movies`;
+  public async fetchAllMovies(): Promise<any> {
+    try {
+      const baseUrl = this.configService.get('MOVIE_BASE_URL');
+      console.log(baseUrl);
+      return this.httpService
+        .get(`${baseUrl}/films`)
+        .pipe(map((response) => response.data));
+    } catch (error) {
+      throw new HttpException(
+        { status: HttpStatus.INTERNAL_SERVER_ERROR, error },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   findOne(id: number) {
