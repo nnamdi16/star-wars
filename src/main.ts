@@ -6,6 +6,7 @@ import {
   SwaggerDocumentOptions,
 } from '@nestjs/swagger';
 import * as cookieParser from 'cookie-parser';
+import * as helmet from 'helmet';
 
 import {
   ClassSerializerInterceptor,
@@ -21,6 +22,7 @@ async function bootstrap() {
     logger: ['debug', 'error', 'log', 'verbose', 'warn'],
   });
   app.use(cookieParser());
+  app.use(helmet());
   app.enableCors();
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
