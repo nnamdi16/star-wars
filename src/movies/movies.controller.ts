@@ -1,23 +1,29 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-} from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { MoviesService } from './movies.service';
-import { CreateMovieDto } from './dto/create-movie.dto';
-import { UpdateMovieDto } from './dto/update-movie.dto';
+import { ApiQuery, ApiTags } from '@nestjs/swagger';
+import { Gender, Order, QueryParams } from '../comment/dto/filterParameter.dto';
 
 @Controller('movies')
+@ApiTags('star-wars')
 export class MoviesController {
   constructor(private readonly moviesService: MoviesService) {}
 
-  @Post()
-  create(@Body() createMovieDto: CreateMovieDto) {
-    return this.moviesService.create(createMovieDto);
+  @Get('/characters?')
+  @ApiQuery({
+    name: 'sortParams',
+    enum: QueryParams,
+    required: false,
+  })
+  @ApiQuery({
+    name: 'order',
+    enum: Order,
+    required: false,
+  })
+  sortCharacters(
+    @Query('sortParams') sortParams?: QueryParams,
+    @Query('order') order?: Order,
+  ) {
+    return this.moviesService.fetchAllCharacters(sortParams, order);
   }
 
   @Get()
@@ -25,18 +31,13 @@ export class MoviesController {
     return this.moviesService.fetchAllMovies();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.moviesService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateMovieDto: UpdateMovieDto) {
-    return this.moviesService.update(+id, updateMovieDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.moviesService.remove(+id);
+  @Get('/characters/filter?')
+  @ApiQuery({
+    name: 'gender',
+    enum: Gender,
+    required: true,
+  })
+  filterCharactersByGender(@Query('gender') gender: Gender) {
+    return this.moviesService.fetchCharactersByGender(gender);
   }
 }
