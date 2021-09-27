@@ -17,20 +17,18 @@ export class MoviesService {
     try {
       const fetchAllComments = await this.commentService.fetchAllComments();
       const baseUrl = this.configService.get('MOVIE_BASE_URL');
-      console.log(baseUrl);
       return this.httpService.get(`${baseUrl}/films`).pipe(
         map((response) => {
           const movieList = response.data.results;
           return movieList.map((data) => {
-            console.log(data);
             const filterCommentsByMovieId = fetchAllComments.filter(
               ({ movieId }) => {
                 const movieUrl = `https://swapi.dev/api/films/${movieId}/`;
-                console.log(data.url, movieUrl);
                 return movieUrl == data.url;
               },
             );
             data['comment'] = filterCommentsByMovieId;
+            data['commentsCount'] = filterCommentsByMovieId.length;
             return movieList;
           });
         }),
@@ -49,7 +47,6 @@ export class MoviesService {
   ): Promise<any> {
     try {
       const baseUrl = this.configService.get('MOVIE_BASE_URL');
-      console.log(baseUrl);
       return this.httpService.get(`${baseUrl}/people`).pipe(
         map((response) => {
           const characterList = response.data;
@@ -82,7 +79,6 @@ export class MoviesService {
   public async fetchCharactersByGender(filterParams: Gender): Promise<any> {
     try {
       const baseUrl = this.configService.get('MOVIE_BASE_URL');
-      console.log(baseUrl);
       return this.httpService.get(`${baseUrl}/people/`).pipe(
         map((response) => {
           const characterList = response.data;
@@ -94,7 +90,6 @@ export class MoviesService {
             accumulator,
             item,
           ) {
-            console.log(accumulator, Number(item.height));
             return accumulator + Number(item.height);
           },
           0);

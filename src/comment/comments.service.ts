@@ -20,12 +20,10 @@ export class CommentsService {
   ): Promise<CreateCommentDto | any> {
     try {
       const { movieId } = createCommentDto;
-      console.log(movieId);
       const baseUrl = this.configService.get('MOVIE_BASE_URL');
       return this.httpService.get(`${baseUrl}/films/${movieId}`).pipe(
         map(async (response) => {
           const fetchMovieById = response.data;
-          console.log(fetchMovieById);
           if (!('title' in fetchMovieById)) {
             const errors = { message: 'Movie not found' };
             throw new HttpException(
