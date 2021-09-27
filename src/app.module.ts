@@ -1,10 +1,11 @@
-import { CommentsModule } from './movies/comments.module';
+import { CommentsModule } from './comment/comments.module';
 import { DatabaseModule } from './database/database.module';
 import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { MoviesModule } from './movies/movies.module';
 import * as Joi from '@hapi/joi';
 
 @Module({
@@ -23,6 +24,7 @@ import * as Joi from '@hapi/joi';
       }),
     }),
     DatabaseModule,
+    MoviesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
