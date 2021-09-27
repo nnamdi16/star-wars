@@ -1,27 +1,40 @@
+
 import { HttpService } from '@nestjs/axios';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { lastValueFrom, map, Observable } from 'rxjs';
-import { CreateMovieDto } from './dto/create-movie.dto';
-import { UpdateMovieDto } from './dto/update-movie.dto';
+import { map } from 'rxjs';
+import { CommentsService } from '../comment/comments.service';
+import { Gender, Order, QueryParams } from '../comment/dto/filterParameter.dto';
 
 @Injectable()
 export class MoviesService {
   constructor(
-    private readonly httpService: HttpService,
     private readonly configService: ConfigService,
+    private readonly commentService: CommentsService,
+    private readonly httpService: HttpService,
   ) {}
-  create(createMovieDto: CreateMovieDto) {
-    return 'This action adds a new movie';
-  }
-
   public async fetchAllMovies(): Promise<any> {
     try {
+      const fetchAllComments = await this.commentService.fetchAllComments();
       const baseUrl = this.configService.get('MOVIE_BASE_URL');
       console.log(baseUrl);
-      return this.httpService
-        .get(`${baseUrl}/films`)
-        .pipe(map((response) => response.data));
+      return this.httpService.get(`${baseUrl}/films`).pipe(
+        map((response) => {
+          const movieList = response.data.results;
+          return movieList.map((data) => {
+            console.log(data);
+            const filterCommentsByMovieId = fetchAllComments.filter(
+              ({ movieId }) => {
+                const movieUrl = `https://swapi.dev/api/films/${movieId}/`;
+                console.log(data.url, movieUrl);
+                return movieUrl == data.url;
+              },
+            );
+            data['comment'] = filterCommentsByMovieId;
+            return movieList;
+          });
+        }),
+      );
     } catch (error) {
       throw new HttpException(
         { status: HttpStatus.INTERNAL_SERVER_ERROR, error },
@@ -30,15 +43,79 @@ export class MoviesService {
     }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} movie`;
+  public async fetchAllCharacters(
+    sortParams?: QueryParams,
+    order = Order.ASCENDING,
+  ): Promise<any> {
+    try {
+      const baseUrl = this.configService.get('MOVIE_BASE_URL');
+      console.log(baseUrl);
+      return this.httpService.get(`${baseUrl}/people`).pipe(
+        map((response) => {
+          const characterList = response.data;
+          if (sortParams && order == Order.ASCENDING) {
+            const sortObj = characterList['results'];
+            sortObj.sort((a, b) => {
+              return a[sortParams].localeCompare(b[sortParams]);
+            });
+            characterList['results'] = sortObj;
+            return characterList;
+          }
+          if (sortParams && order == Order.DESCENDING) {
+            const sortObj = characterList['results'];
+            sortObj.sort((a, b) => b[sortParams].localeCompare(a[sortParams]));
+            characterList['results'] = sortObj;
+            return characterList;
+          }
+
+          return response.data;
+        }),
+      );
+    } catch (error) {
+      throw new HttpException(
+        { status: HttpStatus.INTERNAL_SERVER_ERROR, error },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
-  update(id: number, updateMovieDto: UpdateMovieDto) {
-    return `This action updates a #${id} movie`;
+  public async fetchCharactersByGender(filterParams: Gender): Promise<any> {
+    try {
+      const baseUrl = this.configService.get('MOVIE_BASE_URL');
+      console.log(baseUrl);
+      return this.httpService.get(`${baseUrl}/people/`).pipe(
+        map((response) => {
+          const characterList = response.data;
+          const filteredResult = characterList.results.filter(
+            (data) => data.gender == filterParams,
+          );
+          const totalFilterMatch = filteredResult.length;
+          const totalHeight = filteredResult.reduce(function (
+            accumulator,
+            item,
+          ) {
+            console.log(accumulator, Number(item.height));
+            return accumulator + Number(item.height);
+          },
+          0);
+          const convertedHeight = {
+            feet_inches: this.cmToInFt(totalHeight),
+            cm: `${totalHeight}cm`,
+          };
+          characterList['results'] = filteredResult;
+          characterList['totalMatch'] = totalFilterMatch;
+          characterList['totalHeight'] = convertedHeight;
+          return characterList;
+        }),
+      );
+    } catch (error) {
+      throw new HttpException(
+        { status: HttpStatus.INTERNAL_SERVER_ERROR, error },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} movie`;
-  }
+  cmToInFt = (cm, inches = Math.round(cm / 2.54)) =>
+    `${Math.floor(inches / 12)}ft ${inches % 12}inches`;
 }
