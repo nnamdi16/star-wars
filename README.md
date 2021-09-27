@@ -21,7 +21,18 @@
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+A small set of rest API endpoints using NodeJS that can be used for listing
+the names of Star Wars movies along with their opening crawls and comment
+counts, adding and listing anonymous comments for a movie, and getting the
+character list for a movie.
+
+Tools used include:
+
+* [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+* Postgres
+* TypeOrm
+* Heroku for deployment
+* Docker
 
 ## Installation
 
