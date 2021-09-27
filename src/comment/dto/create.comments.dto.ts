@@ -26,7 +26,7 @@ export class CreateCommentDto implements Readonly<CreateCommentDto> {
   @MaxLength(500)
   @ApiProperty({
     description: 'IP of the commenter',
-    example: '192.0. 2.146',
+    example: '192.0.2.146',
     nullable: false,
     required: true,
     title: 'ipAddress',
